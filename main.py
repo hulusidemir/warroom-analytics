@@ -34,6 +34,7 @@ st.sidebar.markdown("""
         <div style="height: 2px; background: linear-gradient(90deg, #00e5ff, #ff00ff); margin: 10px auto; width: 100%;"></div>
         <p style="color: #8b949e; font-size: 10px; margin: 0; letter-spacing: 3px; font-weight: bold;">QUANTITATIVE TERMINAL</p>
         <p style="color: #e6edf3; font-size: 11px; margin-top: 8px; font-family: 'Courier New', monospace; font-weight: bold; text-shadow: 0 0 4px rgba(0, 229, 255, 0.6);">by Hulusi DEMİR</p>
+        <p style="color: #30363d; font-size: 9px; margin-top: 5px;">v1.1.0</p>
     </div>
     """, unsafe_allow_html=True)
 
