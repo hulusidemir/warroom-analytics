@@ -5,10 +5,23 @@ import requests
 
 class DataFeed:
     def __init__(self):
+        # Proxy Configuration for Streamlit Cloud (US Region Block Fix)
+        # Streamlit Cloud servers are in the US, where Binance/Bybit are blocked.
+        proxies = {}
+        try:
+            if "PROXY" in st.secrets:
+                proxies = {
+                    'http': st.secrets["PROXY"],
+                    'https': st.secrets["PROXY"]
+                }
+        except Exception:
+            pass # Ignore if secrets are not configured locally
+
         # Initialize the Binance USD-M Futures exchange
         self.exchange = ccxt.binanceusdm({
             'enableRateLimit': True,
-            'options': {'defaultType': 'future'}
+            'options': {'defaultType': 'future'},
+            'proxies': proxies
         })
         
         # CRITICAL FIX: Load market metadata immediately upon initialization
@@ -16,19 +29,26 @@ class DataFeed:
         try:
             self.exchange.load_markets()
         except Exception as e:
-            st.error(f"System Init Failure: Could not load Binance markets. {e}")
+            if "451" in str(e) or "Service unavailable" in str(e):
+                st.error("⚠️ **ERİŞİM ENGELİ (GEO-BLOCK):** Streamlit Cloud sunucuları ABD'de olduğu için Binance verilerine erişemiyor. Çözüm için 'Secrets' ayarlarına bir Proxy ekleyin.")
+            else:
+                st.error(f"System Init Failure: Could not load Binance markets. {e}")
 
         # Initialize ByBit for additional data (Explicitly using V5 via 'linear' option)
         self.bybit = ccxt.bybit({
             'enableRateLimit': True,
             'options': {
                 'defaultType': 'linear',  # This ensures V5 API for USDT Perpetuals
-            }
+            },
+            'proxies': proxies
         })
         try:
             self.bybit.load_markets()
         except Exception as e:
-            st.error(f"System Init Failure: Could not load ByBit markets. {e}")
+            if "403" in str(e) or "Forbidden" in str(e):
+                st.warning("⚠️ ByBit erişimi de kısıtlı (ABD Sunucusu).")
+            else:
+                st.error(f"System Init Failure: Could not load ByBit markets. {e}")
 
     @st.cache_data(ttl=10)
     def fetch_market_data(_self, symbol, timeframe='15m', limit=100):
