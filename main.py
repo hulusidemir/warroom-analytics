@@ -56,6 +56,18 @@ if st.sidebar.button("FORCE REFRESH", use_container_width=True):
 st.sidebar.markdown("---")
 st.sidebar.subheader("📡 LOGS")
 
+# Placeholders for immediate clearing of old data
+regime_container = st.sidebar.empty()
+sfp_container = st.sidebar.empty()
+signals_title_container = st.sidebar.empty()
+signals_container = st.sidebar.empty()
+
+# Clear/Loading state
+regime_container.info("Analyzing...")
+sfp_container.empty()
+signals_title_container.empty()
+signals_container.empty()
+
 # --- MAIN DATA FETCH ---
 with st.spinner('Accessing Exchange Feeds...'):
     df, funding_data = feed.fetch_market_data(symbol, timeframe)
@@ -89,28 +101,42 @@ last_regime = df['regime'].iloc[-1]
 last_sfp = df['sfp_signal'].iloc[-1] if df['sfp_signal'].iloc[-1] else "None"
 
 # --- SIDEBAR LOGS UPDATE ---
-st.sidebar.info(f"REGIME: {last_regime}")
+regime_container.info(f"REGIME: {last_regime}")
 if last_sfp != "None":
-    st.sidebar.warning(f"PATTERN: {last_sfp}")
+    sfp_container.warning(f"PATTERN: {last_sfp}")
+else:
+    sfp_container.empty()
 
 # Display Signals in Sidebar
 if tech_summary['signals']:
-    st.sidebar.markdown("### ⚠️ DETECTED SIGNALS")
+    signals_title_container.markdown("### ⚠️ DETECTED SIGNALS")
+    
+    # Build the HTML string for all signals
+    signals_html = ""
     for sig in tech_summary['signals']:
         if "Bullish" in sig or "Positive" in sig or "Oversold" in sig:
-            st.sidebar.markdown(f"""
+            signals_html += f"""
                 <div style="background-color: rgba(0, 255, 0, 0.2); border: 1px solid #00ff00; padding: 10px; border-radius: 5px; margin-bottom: 5px; color: #e6edf3;">
                     {sig}
                 </div>
-            """, unsafe_allow_html=True)
+            """
         elif "Bearish" in sig or "Negative" in sig or "Overbought" in sig:
-            st.sidebar.markdown(f"""
+            signals_html += f"""
                 <div style="background-color: rgba(255, 0, 0, 0.2); border: 1px solid #ff4444; padding: 10px; border-radius: 5px; margin-bottom: 5px; color: #e6edf3;">
                     {sig}
                 </div>
-            """, unsafe_allow_html=True)
+            """
         else:
-            st.sidebar.info(sig)
+            signals_html += f"""
+                <div style="background-color: rgba(128, 128, 128, 0.2); border: 1px solid #8b949e; padding: 10px; border-radius: 5px; margin-bottom: 5px; color: #e6edf3;">
+                    {sig}
+                </div>
+            """
+    
+    signals_container.markdown(signals_html, unsafe_allow_html=True)
+else:
+    signals_title_container.empty()
+    signals_container.empty()
 
 # OI Stats (Binance)
 last_oi = df['oi'].iloc[-1]
