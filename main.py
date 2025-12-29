@@ -24,7 +24,11 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # --- INITIALIZATION ---
-feed = DataFeed()
+@st.cache_resource
+def get_feed():
+    return DataFeed()
+
+feed = get_feed()
 logic = QuantLogic()
 
 # --- SIDEBAR CONTROL ---
